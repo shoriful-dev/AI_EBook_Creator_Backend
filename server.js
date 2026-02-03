@@ -5,6 +5,7 @@ const path = require('path');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes.js');
 const bookRoutes = require('./routes/bookRoutes.js');
+const aiRoutes = require('./routes/aiRoutes.js');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/backend/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
