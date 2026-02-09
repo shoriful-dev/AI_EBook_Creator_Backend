@@ -37,8 +37,8 @@ app.use('/api/export', exportRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.get('/', (req, res) => {
+  res.send('Server is running 🚀');
 });
 
 module.exports = app;
