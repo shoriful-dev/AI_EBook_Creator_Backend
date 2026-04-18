@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
   isPro: {
     type: Boolean,
     default: false,
+  },
+  planExpiry: {
+    type: Date,
+    default: null,
   }
 }, { timestamps: true });
 

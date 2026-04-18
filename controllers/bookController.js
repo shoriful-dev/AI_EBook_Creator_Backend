@@ -9,6 +9,14 @@ const createBook = async (req, res) => {
     if (!title || !author) {
       return res.status(400).json({ message: 'Title and author are required' });
     }
+
+    // Check for free plan limit (3 books)
+    const bookCount = await Book.countDocuments({ userId: req.user._id });
+    if (!req.user.isPro && bookCount >= 3) {
+      return res.status(403).json({
+        message: 'Free plan limit reached (Max 3 books). Please upgrade to Pro for unlimited books.',
+      });
+    }
     const book = await Book.create({
       userId: req.user._id,
       title,
