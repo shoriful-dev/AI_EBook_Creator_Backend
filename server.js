@@ -16,15 +16,11 @@ const app = express();
 // Middleware to handle CORS
 app.use(
   cors({
-    origin: [
-      process.env.FRONTEND_URL,
-      'https://e-book-creator-with-ai.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:5174',
-    ].filter(Boolean),
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: true, // Reflect request origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+    optionsSuccessStatus: 200,
   }),
 );
 
