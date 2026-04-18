@@ -12,7 +12,7 @@ const initPayment = async (req, res) => {
     success_url: process.env.SUCCESS_URL,
     fail_url: process.env.FAIL_URL,
     cancel_url: process.env.CANCEL_URL,
-    ipn_url: 'http://localhost:8000/api/payment/ipn',
+    ipn_url: process.env.IPN_URL || 'http://localhost:8000/api/payment/ipn',
     shipping_method: 'No',
     product_name: 'AI eBook Creator - 1 Year Pro',
     product_category: 'SaaS',
