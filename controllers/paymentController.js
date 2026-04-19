@@ -1,5 +1,34 @@
+const fs = require('fs');
+const path = require('path');
 const SSLCommerzPayment = require('sslcommerz-lts');
 const User = require('../models/User');
+
+// #region agent log
+const agentLogPath = path.join(__dirname, '..', '..', 'debug-4b6289.log');
+const agentLog = (payload) => {
+  const line = JSON.stringify({
+    sessionId: '4b6289',
+    timestamp: Date.now(),
+    ...payload,
+  });
+  try {
+    fs.appendFileSync(agentLogPath, `${line}\n`);
+  } catch (_) {}
+  fetch('http://127.0.0.1:7909/ingest/de734390-d038-4f3f-845d-2e6358563d5e', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4b6289' },
+    body: line,
+  }).catch(() => {});
+};
+const urlScheme = (u) => {
+  if (!u || typeof u !== 'string') return 'missing';
+  try {
+    return new URL(u).protocol;
+  } catch {
+    return 'invalid';
+  }
+};
+// #endregion
 
 const initPayment = async (req, res) => {
   const userId = req.user._id;
@@ -54,7 +83,28 @@ const initPayment = async (req, res) => {
     console.log('SSLCommerz API Response:', apiResponse);
 
     if (apiResponse.status === 'SUCCESS' && apiResponse.GatewayPageURL) {
-      res.send({ url: apiResponse.GatewayPageURL });
+      // #region agent log
+      const gatewayUrl = apiResponse.GatewayPageURL;
+      const debugData = {
+        gatewayScheme: urlScheme(gatewayUrl),
+        successScheme: urlScheme(data.success_url),
+        failScheme: urlScheme(data.fail_url),
+        cancelScheme: urlScheme(data.cancel_url),
+        ipnScheme: urlScheme(data.ipn_url),
+        isSandbox: process.env.IS_SANDBOX === 'true',
+      };
+      agentLog({
+        runId: 'pre-fix',
+        hypothesisId: 'H1-H5',
+        location: 'paymentController.js:initPayment',
+        message: 'SSLCommerz init success; URL schemes',
+        data: debugData,
+      });
+      // #endregion
+      res.send({
+        url: gatewayUrl,
+        _debug4b6289: debugData,
+      });
     } else {
       console.error('Payment initialization failed status:', apiResponse.status);
       console.error('Failure Reason:', apiResponse.failedreason);
