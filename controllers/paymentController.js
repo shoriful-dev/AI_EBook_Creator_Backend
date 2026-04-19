@@ -1,34 +1,5 @@
-const fs = require('fs');
-const path = require('path');
 const SSLCommerzPayment = require('sslcommerz-lts');
 const User = require('../models/User');
-
-// #region agent log
-const agentLogPath = path.join(__dirname, '..', '..', 'debug-4b6289.log');
-const agentLog = (payload) => {
-  const line = JSON.stringify({
-    sessionId: '4b6289',
-    timestamp: Date.now(),
-    ...payload,
-  });
-  try {
-    fs.appendFileSync(agentLogPath, `${line}\n`);
-  } catch (_) {}
-  fetch('http://127.0.0.1:7909/ingest/de734390-d038-4f3f-845d-2e6358563d5e', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '4b6289' },
-    body: line,
-  }).catch(() => {});
-};
-const urlScheme = (u) => {
-  if (!u || typeof u !== 'string') return 'missing';
-  try {
-    return new URL(u).protocol;
-  } catch {
-    return 'invalid';
-  }
-};
-// #endregion
 
 const initPayment = async (req, res) => {
   try {
@@ -77,56 +48,18 @@ const initPayment = async (req, res) => {
       process.env.IS_SANDBOX !== 'true', // live = false if IS_SANDBOX is true
     );
 
-    console.log('--- Initializing Payment ---');
-    console.log('Store ID:', process.env.SSL_STORE_ID);
-    console.log('Is Sandbox:', process.env.IS_SANDBOX);
-
     const apiResponse = await sslcz.init(data);
 
-    // Log full response for debugging
-    console.log('SSLCommerz API Response:', apiResponse);
-
     if (apiResponse.status === 'SUCCESS' && apiResponse.GatewayPageURL) {
-      // #region agent log
-      const gatewayUrl = apiResponse.GatewayPageURL;
-      const debugData = {
-        gatewayScheme: urlScheme(gatewayUrl),
-        successScheme: urlScheme(data.success_url),
-        failScheme: urlScheme(data.fail_url),
-        cancelScheme: urlScheme(data.cancel_url),
-        ipnScheme: urlScheme(data.ipn_url),
-        isSandbox: process.env.IS_SANDBOX === 'true',
-      };
-      agentLog({
-        runId: 'post-fix',
-        hypothesisId: 'H1-H5',
-        location: 'paymentController.js:initPayment',
-        message: 'SSLCommerz init success; URL schemes',
-        data: debugData,
-      });
-      // #endregion
-      res.send({
-        url: gatewayUrl,
-        _debug4b6289: debugData,
-      });
+      res.send({ url: apiResponse.GatewayPageURL });
     } else {
-      console.error('Payment initialization failed status:', apiResponse.status);
-      console.error('Failure Reason:', apiResponse.failedreason);
+      console.error('Payment init failed:', apiResponse.status, apiResponse.failedreason);
       res.status(400).json({
         message: 'Payment initialization failed',
         error: apiResponse.failedreason || 'Unknown error',
       });
     }
   } catch (error) {
-    // #region agent log
-    agentLog({
-      runId: 'post-fix',
-      hypothesisId: 'H-crash',
-      location: 'paymentController.js:initPayment:catch',
-      message: 'initPayment uncaught',
-      data: { errName: error?.name, errMessage: error?.message },
-    });
-    // #endregion
     console.error('initPayment error:', error);
     res.status(500).json({
       message: 'Internal Server Error during payment',
@@ -136,13 +69,13 @@ const initPayment = async (req, res) => {
 };
 
 const paymentSuccess = async (req, res) => {
-  const { val_id, tran_id, value_a } = req.body;
+  const { val_id, value_a } = req.body;
   const userId = value_a;
 
   const sslcz = new SSLCommerzPayment(
     process.env.SSL_STORE_ID,
     process.env.SSL_STORE_PASSWORD,
-    process.env.IS_SANDBOX !== 'true' // live = false if IS_SANDBOX is true
+    process.env.IS_SANDBOX !== 'true', // live = false if IS_SANDBOX is true
   );
 
   try {
@@ -174,12 +107,9 @@ const paymentCancel = (req, res) => {
 };
 
 const paymentIPN = async (req, res) => {
-  console.log('--- Received IPN ---', req.body);
-  const { val_id, status } = req.body;
+  const { status } = req.body;
 
   if (status === 'VALID' || status === 'AUTHENTICATED') {
-    // Usually you would double check validation here too
-    // But basic IPN handling for sandbox is good
     res.status(200).send('IPN Received');
   } else {
     res.status(400).send('Invalid IPN');
