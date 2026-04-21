@@ -24,6 +24,7 @@ exports.registerUser = async (req, res) => {
 
     const user = await User.create({ name, email, password });
     if (user) {
+      console.log('User registered successfully:', email);
       return res.status(201).json({
         message: 'User registered successfully',
         token: generateToken(user._id),
@@ -36,10 +37,12 @@ exports.registerUser = async (req, res) => {
         }
       });
     } else {
+      console.error('User registration failed - Invalid data');
       return res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
-    return res.status(500).json({ message: error.message || 'Server error' });
+    console.error('Registration Error:', error);
+    return res.status(500).json({ message: error.message || 'Server error during registration' });
   }
 };
 
@@ -50,6 +53,7 @@ exports.loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ email }).select('+password');
     if (user && (await user.matchPassword(password))) {
+      console.log('Login successful:', email);
       return res.json({
         message: 'Login successful',
         token: generateToken(user._id),
@@ -62,10 +66,12 @@ exports.loginUser = async (req, res) => {
         }
       });
     } else {
+      console.warn('Login failed - Invalid credentials:', email);
       return res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
-    return res.status(500).json({ message: 'Server error' });
+    console.error('Login Error:', error);
+    return res.status(500).json({ message: error.message || 'Server error during login' });
   }
 };
 
