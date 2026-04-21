@@ -123,9 +123,8 @@ const updateBookCover = async (req, res) => {
     }
 
     if(req.file) {
-      // Store relative path (e.g., uploads/cover-123.jpg) and normalize slashes
-      const relativePath = path.relative(process.cwd(), req.file.path);
-      book.coverImage = relativePath.replace(/\\/g, '/');
+      // Store a clean path that works for the static server
+      book.coverImage = `uploads/${req.file.filename}`;
     } else {
       return res.status(400).json({ message: 'No file uploaded or file type not supported' });
     }

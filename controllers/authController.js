@@ -123,7 +123,7 @@ exports.updateUserAvatar = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (user) {
       if (req.file) {
-        user.avatar = req.file.path;
+        user.avatar = `uploads/${req.file.filename}`;
       } else {
         return res.status(400).json({ message: 'No file uploaded' });
       }
