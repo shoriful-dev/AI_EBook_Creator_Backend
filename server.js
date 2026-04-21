@@ -59,7 +59,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static folders for uploads
 // Static folders for uploads with caching
-app.use('/backend/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const staticUploadDir = isVercel ? '/tmp' : path.join(process.cwd(), 'uploads');
+
+app.use('/backend/uploads', express.static(staticUploadDir, {
   maxAge: '1d',
   setHeaders: (res, path) => {
     res.setHeader('Cache-Control', 'public, max-age=86400');
@@ -68,7 +71,7 @@ app.use('/backend/uploads', express.static(path.join(process.cwd(), 'uploads'), 
 }));
 
 // Fallback for simple /uploads prefix
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+app.use('/uploads', express.static(staticUploadDir));
 
 // Routes
 app.use('/api/auth', authRoutes);

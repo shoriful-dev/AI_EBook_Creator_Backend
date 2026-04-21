@@ -2,10 +2,17 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Use absolute path for upload directory to be safe
-const uploadDir = path.resolve(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Use absolute path for upload directory. On Vercel, use /tmp as it is the only writable directory.
+const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const uploadDir = isVercel ? '/tmp' : path.resolve(process.cwd(), 'uploads');
+
+// Ensure directory exists (only works if parent is writable)
+try {
+    if (!fs.existsSync(uploadDir)){
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+} catch (err) {
+    console.error('Directory creation failed:', err.message);
 }
 
 // Set up storage engine
