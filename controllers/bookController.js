@@ -1,4 +1,5 @@
 const Book = require("../models/Book");
+const path = require("path");
 
 // @desc    Create a new book
 // @route   POST /api/books
@@ -122,15 +123,18 @@ const updateBookCover = async (req, res) => {
     }
 
     if(req.file) {
-      book.coverImage = `${req.file.path}`;
+      // Store relative path (e.g., uploads/cover-123.jpg) and normalize slashes
+      const relativePath = path.relative(process.cwd(), req.file.path);
+      book.coverImage = relativePath.replace(/\\/g, '/');
     } else {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json({ message: 'No file uploaded or file type not supported' });
     }
 
     const updatedBook = await book.save();
     res.status(200).json({ message: 'Book cover updated successfully', book: updatedBook });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Update cover error:', error);
+    res.status(500).json({ message: 'Server error during cover upload', error: error.message });
   }
 };
 

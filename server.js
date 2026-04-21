@@ -24,8 +24,8 @@ app.use(compression());
 // Middleware to handle CORS
 app.use(
   cors({
-    origin: true, // Reflect request origin
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     optionsSuccessStatus: 200,
@@ -41,12 +41,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // Static folders for uploads
 // Static folders for uploads with caching
-app.use('/backend/uploads', express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '1d', // Cache for 1 day
+app.use('/backend/uploads', express.static(path.join(process.cwd(), 'uploads'), {
+  maxAge: '1d',
   setHeaders: (res, path) => {
     res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   }
 }));
+
+// Fallback for simple /uploads prefix
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -20,26 +20,26 @@ const md = new MarkdownIt();
 // Typography configuration for DOCX
 const DOCX_STYLES = {
   fonts: {
-    body: 'Charter',
-    heading: 'Inter',
+    body: 'Times New Roman',
+    heading: 'Arial',
   },
   sizes: {
-    title: 32,
-    subtitle: 20,
+    title: 36,
+    subtitle: 22,
     author: 18,
-    chapterTitle: 24,
-    h1: 20,
-    h2: 18,
-    h3: 16,
+    chapterTitle: 26,
+    h1: 22,
+    h2: 20,
+    h3: 18,
     body: 12,
   },
   spacing: {
-    paragraphBefore: 200,
-    paragraphAfter: 200,
-    chapterBefore: 400,
-    chapterAfter: 300,
-    headingBefore: 300,
-    headingAfter: 150,
+    paragraphBefore: 240,
+    paragraphAfter: 240,
+    chapterBefore: 600,
+    chapterAfter: 400,
+    headingBefore: 400,
+    headingAfter: 200,
   },
 };
 
@@ -54,26 +54,26 @@ const TYPOGRAPHY = {
     sansOblique: 'Helvetica-Oblique',
   },
   sizes: {
-    title: 28,
-    subtitle: 20,
-    author: 16,
-    chapterTitle: 20,
-    h1: 18,
-    h2: 16,
-    h3: 14,
-    body: 11,
-    caption: 9,
+    title: 32,
+    subtitle: 22,
+    author: 18,
+    chapterTitle: 24,
+    h1: 22,
+    h2: 20,
+    h3: 18,
+    body: 12,
+    caption: 10,
   },
   spacing: {
-    paragraphSpacing: 12,
-    chapterSpacing: 24,
-    headingSpacing: { before: 16, after: 8 },
-    listSpacing: 6,
+    paragraphSpacing: 14,
+    chapterSpacing: 30,
+    headingSpacing: { before: 20, after: 10 },
+    listSpacing: 8,
   },
   colors: {
-    text: '#333333',
-    heading: '#1A1A1A',
-    accent: '#4F46E5',
+    text: '#222222',
+    heading: '#000000',
+    accent: '#3B82F6',
   },
 };
 
@@ -130,9 +130,11 @@ const renderInlineTokens = (doc, tokens, options = {}) => {
   if (textBuffer) {
     doc.font(currentFont).text(textBuffer, {
       ...baseOptions,
-      continued: true,
+      continued: false,
     });
   } else {
+    // If we already flushed everything with continued: true, 
+    // we need to end it.
     doc.text('', { continued: false });
   }
 };
@@ -616,11 +618,11 @@ const exportAsPDF = async (req, res) => {
 
     // Add cover image if available
     if (book.coverImage && !book.coverImage.includes('pravatar')) {
-      const imagePath = book.coverImage.substring(1);
+      const imagePath = path.resolve(process.cwd(), book.coverImage);
       try {
         if (fs.existsSync(imagePath)) {
           doc.image(imagePath, {
-            fit: [400, 550],
+            fit: [500, 700],
             align: 'center',
             valign: 'center',
           });
@@ -660,6 +662,12 @@ const exportAsPDF = async (req, res) => {
       .text(`by ${book.author || 'Unknown Author'}`, {
         align: 'center',
       });
+
+    doc.moveDown(2);
+    doc
+      .moveTo(200, doc.y)
+      .lineTo(400, doc.y)
+      .stroke(TYPOGRAPHY.colors.accent);
 
     doc.addPage();
 
@@ -712,7 +720,7 @@ const exportAsDocument = async (req, res) => {
 
     // Cover page with image if available
     if (book.coverImage && !book.coverImage.includes('pravatar')) {
-      const imagePath = book.coverImage.substring(1);
+      const imagePath = path.resolve(process.cwd(), book.coverImage);
 
       try {
         if (fs.existsSync(imagePath)) {
@@ -724,7 +732,7 @@ const exportAsDocument = async (req, res) => {
               children: [
                 new ImageRun({
                   data: imageBuffer,
-                  transformation: { width: 400, height: 550 },
+                  transformation: { width: 450, height: 600 },
                 }),
               ],
               alignment: AlignmentType.CENTER,
