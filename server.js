@@ -54,8 +54,21 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// Connect to the database
-connectDB();
+// Middleware to ensure database connection before processing API requests (essential for Vercel Serverless)
+app.use(async (req, res, next) => {
+  if (req.path === '/') return next();
+
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection middleware error:', error.message);
+    return res.status(500).json({
+      message: 'Database connection failed. Please ensure MONGO_URI is set in Vercel and MongoDB Atlas has Network Access set to 0.0.0.0/0.',
+      error: error.message,
+    });
+  }
+});
 
 // Middleware
 app.use(express.json());
