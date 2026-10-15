@@ -1,5 +1,7 @@
 const dns = require('dns');
-dns.setServers(['1.1.1.1', '8.8.8.8']);
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  dns.setServers(['1.1.1.1', '8.8.8.8']);
+}
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -33,15 +35,17 @@ const allowedOrigins = [
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
+    const frontendEnvUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null;
     if (
-      allowedOrigins.includes(origin) || 
-      origin.startsWith('http://localhost:') || 
+      allowedOrigins.includes(origin) ||
+      (frontendEnvUrl && origin === frontendEnvUrl) ||
+      origin.startsWith('http://localhost:') ||
       origin.startsWith('http://127.0.0.1:') ||
       origin.endsWith('.vercel.app')
     ) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false);
     }
   },
   credentials: true,

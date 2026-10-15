@@ -45,7 +45,7 @@ const generateOutline = async (req, res) => {
     Now, generate the book outline based on the provided topic and requirements.`;
 
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-20b',
       messages: [
         {
           role: 'user',
@@ -62,9 +62,7 @@ const generateOutline = async (req, res) => {
     const endIndex = text.lastIndexOf(']');
 
     if (startIndex === -1 || endIndex === -1) {
-      return res
-        .status(500)
-        .json({ message: 'Failed to parse AI response, no JSON array found' });
+      return res.status(500).json({ message: 'Failed to parse AI response, no JSON array found' });
     }
 
     const jsonString = text.substring(startIndex, endIndex + 1);
@@ -78,9 +76,7 @@ const generateOutline = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({ message: 'Server error during AI outline generation' });
+    res.status(500).json({ message: 'Server error during AI outline generation' });
   }
 };
 
@@ -121,7 +117,7 @@ Return only the chapter content as plain text without any JSON formatting, markd
 Now, generate the complete chapter content based on the provided title and requirements.`;
 
     const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-20b',
       messages: [
         {
           role: 'user',
@@ -136,9 +132,7 @@ Now, generate the complete chapter content based on the provided title and requi
     return res.status(200).json({ content });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({ message: 'Server error during AI chapter content generation' });
+    res.status(500).json({ message: 'Server error during AI chapter content generation' });
   }
 };
 
